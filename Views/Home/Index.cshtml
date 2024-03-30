@@ -1,0 +1,310 @@
+﻿@{
+    ViewData["Title"] = "Medical Cards";
+}
+
+<div id="app">
+
+    <div class="card" style="background-color: #f8f9fa;">
+        <div class="card-header">
+            <h2>Добавить новую медицинскую карту</h2>
+        </div>
+
+        <div style="padding: 20px;">
+            <!-- Строка 1: Фамилия, Имя, Отчество, Дата рождения -->
+            <div class="form-group">
+                <div class="row">
+                    <div class="col">
+                        <label for="surname">Фамилия:</label>
+                        <input type="text" class="form-control" id="surname" v-model="newMedicalCard.surname">
+                    </div>
+                    <div class="col">
+                        <label for="name">Имя:</label>
+                        <input type="text" class="form-control" id="name" v-model="newMedicalCard.name">
+                    </div>
+                    <div class="col">
+                        <label for="lastname">Отчество:</label>
+                        <input type="text" class="form-control" id="lastname" v-model="newMedicalCard.lastname">
+                    </div>
+                    <div class="col">
+                        <label for="birthdate">Дата рождения:</label>
+                        <input type="date" class="form-control" id="birthdate" v-model="newMedicalCard.birthdate">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Строка 2: Адрес, Номер телефона -->
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-9">
+                        <label for="address">Адрес:</label>
+                        <input type="text" class="form-control" id="address" v-model="newMedicalCard.address">
+                    </div>
+                    <div class="col">
+                        <label for="phone">Телефон:</label>
+                        <input type="text" class="form-control" id="phone" v-model="newMedicalCard.phone">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Строка 3-4: Анамнез, Место работы, Должность -->
+            <div class="form-group row flex-grow-1">
+                <div class="col-6 d-flex flex-column">
+                    <label for="anamnez">Анамнез:</label>
+                    <textarea class="form-control flex-grow-1" id="anamnez" style="resize: none;" v-model="newMedicalCard.anamnez"></textarea>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="workplace">Место работы:</label>
+                        <input type="text" class="form-control" id="workplace" v-model="newMedicalCard.workplace">
+                    </div>
+                    <div class="form-group">
+                        <label for="dolznost">Должность:</label>
+                        <input type="text" class="form-control" id="dolznost" v-model="newMedicalCard.dolznost">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Строка 5: Пол -->
+            <div class="form-group">
+                <label for="gender">Пол:</label>
+                <select class="form-control" id="gender" v-model="newMedicalCard.isMan">
+                    <option value="true">Мужской</option>
+                    <option value="false">Женский</option>
+                </select>
+            </div>
+
+            <!-- Кнопка добавления -->
+            <button type="submit" class="btn btn-primary" style="margin:30px auto" v-on:click="addMedicalCard">Добавить медицинскую карту</button>
+        </div>
+    </div>
+
+
+    <div class="card" style="background-color: #f8f9fa; margin-top:30px;">
+        <div class="card-header">
+            <h2>Данные</h2>
+        </div>
+        <input type="text" v-model="searchQuery" class="form-control" placeholder="Поиск...">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>Отчество</th>
+                    <th>Дата рождения</th>
+                    <th>Адрес</th>
+                    <th>Телефон</th>
+                    <th>Место работы</th>
+                    <th>Должность</th>
+                    <th>Анамнез</th>
+                    <th>Пол</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="card in filteredMedicalCards" :key="card.id" v-on:dblclick="editCard(card)">
+                    <td>{{ card.name }}</td>
+                    <td>{{ card.surname }}</td>
+                    <td>{{ card.lastname }}</td>
+                    <td>{{ card.birthdate ? new Date(card.birthdate).toLocaleDateString() : '' }}</td>
+                    <td>{{ card.adress }}</td>
+                    <td>{{ card.phone }}</td>
+                    <td>{{ card.workplace }}</td>
+                    <td>{{ card.dolznost }}</td>
+                    <td>{{ card.anamnez }}</td>
+                    <td>{{ card.isMan ? 'Мужской' : 'Женский' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+    <div class="modal" id="editModal" tabindex="-1">
+        <div class="modal-dialog"  style="max-width:1000px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать данные</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div style="padding: 20px;">
+                            <!-- Строка 1: Фамилия, Имя, Отчество, Дата рождения -->
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col">
+                                        <label for="editSurname">Фамилия:</label>
+                                        <input type="text" class="form-control" id="editSurname" v-model="edCard.surname">
+                                    </div>
+                                    <div class="col">
+                                        <label for="editName">Имя:</label>
+                                        <input type="text" class="form-control" id="editName" v-model="edCard.name">
+                                    </div>
+                                    <div class="col">
+                                        <label for="editLastname">Отчество:</label>
+                                        <input type="text" class="form-control" id="editLastname" v-model="edCard.lastname">
+                                    </div>
+                                    <div class="col">
+                                        <label for="editBirthdate">Дата рождения:</label>
+                                        <input type="date" class="form-control" id="editBirthdate" v-model="edCard.birthdate">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Строка 2: Адрес, Номер телефона -->
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-9">
+                                        <label for="editAddress">Адрес:</label>
+                                        <input type="text" class="form-control" id="editAddress" v-model="edCard.address">
+                                    </div>
+                                    <div class="col">
+                                        <label for="editPhone">Телефон:</label>
+                                        <input type="text" class="form-control" id="editPhone" v-model="edCard.phone">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Строка 3-4: Анамнез, Место работы, Должность -->
+                            <div class="form-group row flex-grow-1">
+                                <div class="col-6 d-flex flex-column">
+                                    <label for="editAnamnez">Анамнез:</label>
+                                    <textarea class="form-control flex-grow-1" id="editAnamnez" style="resize: none;" v-model="edCard.anamnez"></textarea>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-group">
+                                        <label for="editWorkplace">Место работы:</label>
+                                        <input type="text" class="form-control" id="editWorkplace" v-model="edCard.workplace">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editDolznost">Должность:</label>
+                                        <input type="text" class="form-control" id="editDolznost" v-model="edCard.dolznost">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Строка 5: Пол -->
+                            <div class="form-group">
+                                <label for="editGender">Пол:</label>
+                                <select class="form-control" id="editGender" v-model="edCard.isMan">
+                                    <option value="true">Мужской</option>
+                                    <option value="false">Женский</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" v-on:click="updateMedicalCard">Сохранить изменения</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    newMedicalCard: {
+                        name: '',
+                        surname: '',
+                        lastname: '',
+                        birthdate: null,
+                        adress: '',
+                        phone: '',
+                        workplace: '',
+                        dolznost: '',
+                        anamnez: '',
+                        isMan: true
+                    },
+                    medicalCards: [],
+                    edCard: {},
+                    searchQuery: '',
+                };
+            },
+            mounted() {
+                this.fetchMedicalCards();
+            },
+            computed: {
+                filteredMedicalCards() {
+                    return this.medicalCards.filter(card => {
+                        return card.name?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            card.surname?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            card.lastname?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            card.anamnez?.toLowerCase().includes(this.searchQuery.toLowerCase());
+                    });
+                }
+            },
+            methods: {
+                async addMedicalCard() {
+                    try {
+                        if (typeof this.newMedicalCard.isMan != "boolean") {
+                            this.newMedicalCard.isMan = this.newMedicalCard.isMan === "true";
+                        }
+                        await axios.post('/api/MedicalRecords', this.newMedicalCard);
+                        this.clearForm();
+                        this.fetchMedicalCards();
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                async fetchMedicalCards() {
+                    try {
+                        const response = await axios.get('/api/MedicalRecords');
+                        this.medicalCards = response.data; // Обновляем список карт в соответствии с полученными данными
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                clearForm() {
+                    this.newMedicalCard = {
+                        name: '',
+                        surname: '',
+                        lastname: '',
+                        birthdate: null,
+                        adress: '',
+                        phone: '',
+                        workplace: '',
+                        dolznost: '',
+                        anamnez: '',
+                        isMan: true
+                    };
+                },
+                editCard(card) {
+                    console.log(card);
+                    this.edCard = { ...card };
+                    console.log(this.edCard)// Копируем данные карточки для редактирования
+                    $('#editModal').modal('show'); // Открываем модальное окно                    
+                },
+                async updateMedicalCard() {
+                    try {
+                        const idToUpdate = this.edCard.id;
+                        if (typeof this.edCard.isMan != "boolean") {
+                            this.edCard.isMan = this.edCard.isMan === "true";
+                        }
+
+                        await axios.put(`/api/MedicalRecords/${idToUpdate}`, this.edCard);
+
+                       
+                        $('#editModal').modal('hide');
+
+                        this.fetchMedicalCards();
+                    } catch (error) {
+                        console.error(error);
+                    }
+                },
+                async testasdawad() {
+                    console.log(this.edCard)
+                },
+            }
+        });
+    </script>
+}
